@@ -1,0 +1,239 @@
+diff -Naur A/arch/arm/configs/imx6ull_iwg26i_defconfig B/arch/arm/configs/imx6ull_iwg26i_defconfig
+--- A/arch/arm/configs/imx6ull_iwg26i_defconfig	2022-10-11 21:29:07.050440617 +0530
++++ B/arch/arm/configs/imx6ull_iwg26i_defconfig	2022-10-11 21:29:30.200646242 +0530
+@@ -1757,7 +1757,7 @@
+ # CONFIG_TERANETICS_PHY is not set
+ # CONFIG_VITESSE_PHY is not set
+ # CONFIG_XILINX_GMII2RGMII is not set
+-# CONFIG_TI_PHY_DP83848 is not set
++CONFIG_TI_PHY_DP83848=y
+ # CONFIG_MICREL_KS8995MA is not set
+ CONFIG_PPP=y
+ CONFIG_PPP_BSDCOMP=y
+diff -Naur A/arch/arm/mach-imx/mach-iwg26i.c B/arch/arm/mach-imx/mach-iwg26i.c
+--- A/arch/arm/mach-imx/mach-iwg26i.c	2022-10-11 21:29:07.050440617 +0530
++++ B/arch/arm/mach-imx/mach-iwg26i.c	2022-10-11 21:28:12.735448033 +0530
+@@ -213,7 +213,7 @@
+ 	printk ("\n");
+ 	printk ("Board Info :\n");
+ 	printk ("\tBSP Version : %s\n", BSP_VERSION);
+-	printk ("\tDevice Name and Release : iW-PRGST-SC-R1.0-REL2.3-Rugged_Telematics_Device\n");
++	printk ("\tDevice Name and Release : iW-PRGST-SC-R1.0-REL2.4-Rugged_Telematics_Device\n");
+ 	printk ("\tCPU Unique ID\t: 0x%08x%08x \n", unique_id2, unique_id1);
+ 	printk ("\n");
+ 
+diff -Naur A/drivers/net/can/m_can/m_can.c B/drivers/net/can/m_can/m_can.c
+--- A/drivers/net/can/m_can/m_can.c	2022-10-11 21:29:07.050440617 +0530
++++ B/drivers/net/can/m_can/m_can.c	2022-10-11 21:53:45.147541402 +0530
+@@ -938,15 +938,35 @@
+ 	u32 ir;
+ 
+ 	ir = m_can_read(cdev, M_CAN_IR);
+-	if (!ir)
+-		return IRQ_NONE;
++	if(iw_mcan_prop)
++	{
++		if (ir != 0x1800 && ir != 0x1801 && ir != 0x0)
++			ir = 3;
++	}
++	else
++	{
++		if (!ir)
++			return IRQ_NONE;
++	}
+ 
+ 	/* ACK all irqs */
+ 	if (ir & IR_ALL_INT)
+ 		m_can_write(cdev, M_CAN_IR, ir);
+ 
+ 	if (cdev->ops->clear_interrupts)
+-		cdev->ops->clear_interrupts(cdev);
++	{
++		if(iw_mcan_prop)
++		{
++			if(ir == 3 || ir == 0)
++				cdev->ops->clear_interrupts(cdev);
++			else
++				cdev->ops->clear_interrupts_tx(cdev);
++		}
++		else
++		{
++			cdev->ops->clear_interrupts(cdev);
++		}
++	}
+ 
+ 	/* schedule NAPI in case of
+ 	 * - rx IRQ
+@@ -1073,7 +1093,7 @@
+ 		 * This is mentioned in the "Bit Time Requirements for CAN FD"
+ 		 * paper presented at the International CAN Conference 2013
+ 		 */
+-		if (dbt->bitrate > 2500000) {
++		if (dbt->bitrate >= 2500000) {
+ 			u32 tdco, ssp;
+ 
+ 			/* Use the same value of secondary sampling point
+@@ -1133,7 +1153,7 @@
+ 	struct m_can_classdev *cdev = netdev_priv(dev);
+ 	u32 cccr, test;
+ 
+-	if (!iw_mcan_prop)
++	if(!iw_mcan_prop)
+ 	{
+ 		m_can_config_endisable(cdev, true);
+ 	}
+@@ -1180,7 +1200,7 @@
+ 		cdev->mcfg[MRAM_RXF0].num << RXFC_FS_SHIFT | cdev->mcfg[MRAM_RXF0].off;
+ 		m_can_write(cdev, M_CAN_RXF1C,
+ 				(cdev->mcfg[MRAM_RXF1].num << RXFC_FS_SHIFT) |
+-				cdev->mcfg[MRAM_RXF1].off| 0x99000000);
++				cdev->mcfg[MRAM_RXF1].off | 0x99000000);
+ 	}
+ 	else /* iw_mcan_prop */
+ 	{
+@@ -1328,7 +1348,11 @@
+ 	int niso_timeout = -ETIMEDOUT;
+ 	int i;
+ 
+-	m_can_config_endisable(cdev, true);
++	if(!iw_mcan_prop)
++	{
++		m_can_config_endisable(cdev, true);
++	}
++
+ 	cccr_reg = m_can_read(cdev, M_CAN_CCCR);
+ 	cccr_reg |= CCCR_NISO;
+ 	m_can_write(cdev, M_CAN_CCCR, cccr_reg);
+diff -Naur A/drivers/net/can/m_can/m_can.h B/drivers/net/can/m_can/m_can.h
+--- A/drivers/net/can/m_can/m_can.h	2022-10-11 21:29:07.050440617 +0530
++++ B/drivers/net/can/m_can/m_can.h	2022-10-11 21:28:13.051415296 +0530
+@@ -66,6 +66,9 @@
+ struct m_can_ops {
+ 	/* Device specific call backs */
+ 	int (*clear_interrupts)(struct m_can_classdev *cdev);
++#ifdef CONFIG_MX6ULL_IWG26I
++	int (*clear_interrupts_tx)(struct m_can_classdev *cdev);
++#endif /* CONFIG_MX6ULL_IWG26I */
+ 	u32 (*read_reg)(struct m_can_classdev *cdev, int reg);
+ 	int (*write_reg)(struct m_can_classdev *cdev, int reg, int val);
+ 	u32 (*read_fifo)(struct m_can_classdev *cdev, int addr_offset);
+diff -Naur A/drivers/net/can/m_can/tcan4x5x.c B/drivers/net/can/m_can/tcan4x5x.c
+--- A/drivers/net/can/m_can/tcan4x5x.c	2022-10-11 21:29:07.050440617 +0530
++++ B/drivers/net/can/m_can/tcan4x5x.c	2022-10-11 21:28:13.051415296 +0530
+@@ -88,6 +88,14 @@
+ 	(TCAN4X5X_MCAN_IR_TC | TCAN4X5X_MCAN_IR_RF0F | \
+ 	 TCAN4X5X_MCAN_IR_RF1F | TCAN4X5X_MCAN_IR_RF0W | \
+ 	 TCAN4X5X_MCAN_IR_RF1W)
++#define WDT_ENABLE (BIT(3) | BIT(4))
++#define WDT_ENABLE_BIT BIT(3)
++#define WDT_CLK (BIT(27) | BIT(28))
++#define WDT_CLK_BIT BIT(27)
++#define WDT_RESET (BIT(18) | BIT(19))
++#define WDT_RESET_BIT BIT(18)
++#define WDT_TIM (BIT(28) | BIT(29))
++#define WDT_TIM_BIT BIT(29)
+ #else /* CONFIG_MX6ULL_IWG26I */
+ #define TCAN4X5X_ENABLE_MCAN_INT \
+ 	(TCAN4X5X_MCAN_IR_TC | TCAN4X5X_MCAN_IR_RF0N | \
+@@ -320,6 +328,7 @@
+ static int tcan4x5x_clear_interrupts(struct m_can_classdev *cdev)
+ {
+ 	int ret;
++	struct tcan4x5x_priv *tcan4x5x = cdev->device_data;
+ 
+ 	ret = tcan4x5x_write_tcan_reg(cdev, TCAN4X5X_STATUS,
+ 			TCAN4X5X_CLEAR_ALL_INT);
+@@ -341,6 +350,39 @@
+ 	if (ret)
+ 		return ret;
+ 
++	if (iw_tcan_prop)
++	{
++		ret = regmap_update_bits(tcan4x5x->regmap, TCAN4X5X_CONFIG,
++				WDT_RESET, WDT_RESET_BIT);
++	}
++
++	return ret;
++}
++
++static int tcan4x5x_clear_interrupts_tx(struct m_can_classdev *cdev)
++{
++	int ret;
++	struct tcan4x5x_priv *tcan4x5x = cdev->device_data;
++	ret = tcan4x5x_write_tcan_reg(cdev, TCAN4X5X_STATUS,
++			TCAN4X5X_CLEAR_ALL_INT);
++	if (ret)
++		return ret;
++
++	ret = tcan4x5x_write_tcan_reg(cdev, TCAN4X5X_MCAN_INT_REG,
++			TCAN4X5X_ENABLE_MCAN_INT);
++	if (ret)
++		return ret;
++
++	ret = tcan4x5x_write_tcan_reg(cdev, TCAN4X5X_INT_FLAGS,
++			TCAN4X5X_CLEAR_ALL_INT);
++	if (ret)
++		return ret;
++
++	ret = tcan4x5x_write_tcan_reg(cdev, TCAN4X5X_ERROR_STATUS,
++			TCAN4X5X_CLEAR_ALL_INT);
++	if (ret)
++		return ret;
++
+ 	return ret;
+ }
+ 
+@@ -351,15 +393,33 @@
+ 
+ 	tcan4x5x_check_wake(tcan4x5x);
+ 
+-	ret = tcan4x5x_clear_interrupts(cdev);
+-	if (ret)
+-		return ret;
++	if (!iw_tcan_prop)
++	{
++		ret = tcan4x5x_clear_interrupts(cdev);
++		if (ret)
++			return ret;
++	}
+ 
+ 	ret = tcan4x5x_write_tcan_reg(cdev, TCAN4X5X_INT_EN,
+ 			TCAN4X5X_ENABLE_TCAN_INT);
+ 	if (ret)
+ 		return ret;
+ 
++	if (iw_tcan_prop)
++	{
++		ret = regmap_update_bits(tcan4x5x->regmap, TCAN4X5X_CONFIG,
++				WDT_CLK, WDT_CLK_BIT);
++		if (ret)
++			return ret;
++		ret = regmap_update_bits(tcan4x5x->regmap, TCAN4X5X_CONFIG,
++				WDT_ENABLE, WDT_ENABLE_BIT);
++		if (ret)
++			return ret;
++		ret = tcan4x5x_clear_interrupts(cdev);
++		if (ret)
++			return ret;
++	}
++
+ 	ret = regmap_update_bits(tcan4x5x->regmap, TCAN4X5X_CONFIG,
+ 			TCAN4X5X_MODE_SEL_MASK, TCAN4X5X_MODE_NORMAL);
+ 	if (ret)
+@@ -426,11 +486,14 @@
+ 	.write_fifo = tcan4x5x_write_fifo,
+ 	.read_fifo = tcan4x5x_read_fifo,
+ 	.clear_interrupts = tcan4x5x_clear_interrupts,
++#ifdef CONFIG_MX6ULL_IWG26I
++	.clear_interrupts_tx = tcan4x5x_clear_interrupts_tx,
++#endif /* CONFIG_MX6ULL_IWG26I */
+ };
+ 
+ /*
+-* Added for the reset of TCAN4X5X chip
+-*/
++ * Added for the reset of TCAN4X5X chip
++ */
+ static int tcan4x5x_wakeup_mode( void )
+ {
+ 	usleep_range(10, 50);

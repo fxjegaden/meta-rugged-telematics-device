@@ -1,0 +1,132 @@
+diff -Naur A/arch/arm/boot/dts/imx6ull-iwg26i.dtsi B/arch/arm/boot/dts/imx6ull-iwg26i.dtsi
+--- A/arch/arm/boot/dts/imx6ull-iwg26i.dtsi	2022-09-22 15:27:46.655579890 +0530
++++ B/arch/arm/boot/dts/imx6ull-iwg26i.dtsi	2022-09-22 15:20:49.494991569 +0530
+@@ -170,7 +170,7 @@
+ };
+ 
+ &i2c1 {
+-	clock-frequency = <400000>;
++	clock-frequency = <100000>;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_i2c1>;
+ 	status = "okay";
+@@ -187,7 +187,7 @@
+ };
+ 
+ &i2c2 {
+-	clock-frequency = <400000>;
++	clock-frequency = <100000>;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_i2c2>;
+ 	status = "okay";
+@@ -248,9 +248,9 @@
+ 		clocks = <&hclk>, <&cclk>;
+ 		clock-names = "hclk", "cclk";
+ 		interrupt-parent = <&gpio1>;
+-		interrupts = <23 GPIO_ACTIVE_LOW>;
+-		data-ready-gpios = <&gpio1 23 GPIO_ACTIVE_LOW>;
+-		reset-gpios = <&gpio1 22 GPIO_ACTIVE_LOW>;
++		interrupts = <23 GPIO_ACTIVE_HIGH>;
++		data-ready-gpios = <&gpio1 23 GPIO_ACTIVE_HIGH>;
++		reset-gpios = <&gpio1 22 GPIO_ACTIVE_HIGH>;
+ 		iw-tcan-prop;
+ 		status = "okay";
+ 	};
+diff -Naur A/drivers/net/can/m_can/m_can.c B/drivers/net/can/m_can/m_can.c
+--- A/drivers/net/can/m_can/m_can.c	2022-09-07 13:21:26.953397157 +0530
++++ B/drivers/net/can/m_can/m_can.c	2022-09-22 15:29:02.955744019 +0530
+@@ -24,6 +24,7 @@
+ 
+ #include "m_can.h"
+ bool iw_mcan_prop = false; /* Flag added for Rugged Telematics Device */
++bool mode = false; /* Flag added for determining when TCAN has to go to standby mode */
+ 
+ /* registers definition */
+ enum m_can_reg {
+@@ -1110,8 +1111,8 @@
+ }
+ 
+ /*
+-* Set the "iw_mcan_prop" flag to execute iWave specific changes
+-*/
++ * Set the "iw_mcan_prop" flag to execute iWave specific changes
++ */
+ void m_can_set_iw_mcan_prop_flag( void )
+ {
+ 	iw_mcan_prop = true;
+@@ -1132,7 +1133,10 @@
+ 	struct m_can_classdev *cdev = netdev_priv(dev);
+ 	u32 cccr, test;
+ 
+-	m_can_config_endisable(cdev, true);
++	if (!iw_mcan_prop)
++	{
++		m_can_config_endisable(cdev, true);
++	}
+ 
+ 	/* RX Buffer/FIFO Element Size 64 bytes data field */
+ 	m_can_write(cdev, M_CAN_RXESC, M_CAN_RXESC_64BYTES);
+@@ -1171,11 +1175,12 @@
+ 		/* rx fifo configuration, blocking mode, fifo size 1 */
+ 		m_can_write(cdev, M_CAN_RXF0C,
+ 				(cdev->mcfg[MRAM_RXF0].num << RXFC_FS_SHIFT) |
+-				cdev->mcfg[MRAM_RXF0].off | 0x81200000);
++				cdev->mcfg[MRAM_RXF0].off | 0x99000000);
+ 
++		cdev->mcfg[MRAM_RXF0].num << RXFC_FS_SHIFT | cdev->mcfg[MRAM_RXF0].off;
+ 		m_can_write(cdev, M_CAN_RXF1C,
+ 				(cdev->mcfg[MRAM_RXF1].num << RXFC_FS_SHIFT) |
+-				cdev->mcfg[MRAM_RXF1].off| 0x81200000);
++				cdev->mcfg[MRAM_RXF1].off| 0x99000000);
+ 	}
+ 	else /* iw_mcan_prop */
+ 	{
+@@ -1248,6 +1253,10 @@
+ 	m_can_set_bittiming(dev);
+ 
+ 	m_can_config_endisable(cdev, false);
++	if(iw_mcan_prop)
++	{
++		mode = true;
++	}
+ 
+ 	if (cdev->ops->init)
+ 		cdev->ops->init(cdev);
+@@ -1336,9 +1345,16 @@
+ 
+ 	/* Clear NISO */
+ 	cccr_reg &= ~(CCCR_NISO);
+-	m_can_write(cdev, M_CAN_CCCR, cccr_reg);
++	if(iw_mcan_prop)
++	{
++		m_can_write(cdev, M_CAN_CCCR, cccr_reg | CCCR_FDOE | CCCR_BRSE);
++	}
++	else
++	{
++		m_can_write(cdev, M_CAN_CCCR, cccr_reg);
+ 
+-	m_can_config_endisable(cdev, false);
++		m_can_config_endisable(cdev, false);
++	}
+ 
+ 	/* return false if time out (-ETIMEDOUT), else return true */
+ 	return !niso_timeout;
+@@ -1751,6 +1767,18 @@
+ {
+ 	int end, i, start;
+ 
++	if(iw_mcan_prop)
++	{
++		if(mode == false)
++		{
++			m_can_config_endisable(cdev, true);
++		}
++		if(mode == true)
++		{
++			mode = false;
++		}
++	}
++
+ 	/* initialize the entire Message RAM in use to avoid possible
+ 	 * ECC/parity checksum errors when reading an uninitialized buffer
+ 	 */

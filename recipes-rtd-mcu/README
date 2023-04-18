@@ -1,0 +1,7 @@
+This README file contains information on the contents of the meta-rugged-telematics-device-source layer.
+
+[Procedure to add the Yocto layer]
+----------------------------------
+	* Replace the "meta-rugged-telematics-device" layer with "meta-rugged-telematics-device-source" layer in the "bblayers.conf" file.
+	* Compile the core-image-minimal with below command:
+		$ bitbake core-image-minimal

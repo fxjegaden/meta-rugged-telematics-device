@@ -1,0 +1,10 @@
+[Unit]
+Description=testc Monitor service
+After=sys-subsystem-net-devices-wlan0.device
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/watchdog
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,294 @@
+diff -Naur A/arch/arm/boot/dts/imx6ull-iwg26i.dtsi B/arch/arm/boot/dts/imx6ull-iwg26i.dtsi
+--- A/arch/arm/boot/dts/imx6ull-iwg26i.dtsi	2022-10-11 12:12:47.000000000 +0530
++++ B/arch/arm/boot/dts/imx6ull-iwg26i.dtsi	2022-11-07 13:34:58.000000000 +0530
+@@ -252,6 +252,7 @@
+ 		data-ready-gpios = <&gpio1 23 GPIO_ACTIVE_HIGH>;
+ 		reset-gpios = <&gpio1 22 GPIO_ACTIVE_HIGH>;
+ 		iw-tcan-prop;
++		wakeup-source;
+ 		status = "okay";
+ 	};
+ };
+diff -Naur A/arch/arm/mach-imx/mach-iwg26i.c B/arch/arm/mach-imx/mach-iwg26i.c
+--- A/arch/arm/mach-imx/mach-iwg26i.c	2022-10-12 21:08:17.000000000 +0530
++++ B/arch/arm/mach-imx/mach-iwg26i.c	2022-11-17 13:46:26.987671576 +0530
+@@ -213,7 +213,7 @@
+ 	printk ("\n");
+ 	printk ("Board Info :\n");
+ 	printk ("\tBSP Version : %s\n", BSP_VERSION);
+-	printk ("\tDevice Name and Release : iW-PRGST-SC-R1.0-REL2.4-Rugged_Telematics_Device\n");
++	printk ("\tDevice Name and Release : iW-PRGST-SC-R1.0-REL2.4.1_Rugged_Telematics_Device\n");
+ 	printk ("\tCPU Unique ID\t: 0x%08x%08x \n", unique_id2, unique_id1);
+ 	printk ("\n");
+ 
+diff -Naur A/drivers/net/can/m_can/m_can.c B/drivers/net/can/m_can/m_can.c
+--- A/drivers/net/can/m_can/m_can.c	2022-10-12 21:08:17.000000000 +0530
++++ B/drivers/net/can/m_can/m_can.c	2022-11-17 13:59:04.807504480 +0530
+@@ -25,6 +25,7 @@
+ #include "m_can.h"
+ bool iw_mcan_prop = false; /* Flag added for Rugged Telematics Device */
+ bool mode = false; /* Flag added for determining when TCAN has to go to standby mode */
++int iw_ie_reg = 0; /* Variable to hold the runtime value of Interrupt Enable Register */
+ 
+ /* registers definition */
+ enum m_can_reg {
+@@ -877,6 +878,16 @@
+ 	return 0;
+ }
+ 
++int m_can_rx_clear(struct net_device *dev)
++{
++	struct m_can_classdev *cdev = netdev_priv(dev);
++	m_can_disable_all_interrupts(cdev);
++	m_can_rx_peripheral(dev);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(m_can_rx_clear);
++
+ static int m_can_poll(struct napi_struct *napi, int quota)
+ {
+ 	struct net_device *dev = napi->dev;
+@@ -1977,6 +1988,21 @@
+ }
+ EXPORT_SYMBOL_GPL(m_can_class_unregister);
+ 
++#ifdef CONFIG_MX6ULL_IWG26I
++void m_can_disable_rx_irq(struct m_can_classdev *m_can_dev)
++{
++	iw_ie_reg = m_can_read(m_can_dev, M_CAN_IE);
++	m_can_write(m_can_dev, M_CAN_IE, iw_ie_reg & 0xFFFFFE00);
++}
++EXPORT_SYMBOL_GPL(m_can_disable_rx_irq);
++
++void m_can_enable_rx_irq(struct m_can_classdev *m_can_dev)
++{
++        m_can_write(m_can_dev, M_CAN_IE, iw_ie_reg);
++}
++EXPORT_SYMBOL_GPL(m_can_enable_rx_irq);
++#endif /* CONFIG_MX6ULL_IWG26I */
++
+ MODULE_AUTHOR("Dong Aisheng <b29396@freescale.com>");
+ MODULE_AUTHOR("Dan Murphy <dmurphy@ti.com>");
+ MODULE_LICENSE("GPL v2");
+diff -Naur A/drivers/net/can/m_can/m_can.h B/drivers/net/can/m_can/m_can.h
+--- A/drivers/net/can/m_can/m_can.h	2022-10-12 21:08:17.000000000 +0530
++++ B/drivers/net/can/m_can/m_can.h	2022-11-17 10:20:10.000000000 +0530
+@@ -115,4 +115,11 @@
+ 
+ int m_can_class_suspend(struct device *dev);
+ int m_can_class_resume(struct device *dev);
++
++#ifdef CONFIG_MX6ULL_IWG26I
++int m_can_rx_clear(struct net_device *dev);
++void m_can_disable_rx_irq(struct m_can_classdev *m_can_dev);
++void m_can_enable_rx_irq(struct m_can_classdev *m_can_dev);
++#endif /* CONFIG_MX6ULL_IWG26I */
++
+ #endif	/* _CAN_M_H_ */
+diff -Naur A/drivers/net/can/m_can/tcan4x5x.c B/drivers/net/can/m_can/tcan4x5x.c
+--- A/drivers/net/can/m_can/tcan4x5x.c	2022-10-12 21:08:17.000000000 +0530
++++ B/drivers/net/can/m_can/tcan4x5x.c	2022-11-17 14:03:00.629455384 +0530
+@@ -88,6 +88,13 @@
+ 	(TCAN4X5X_MCAN_IR_TC | TCAN4X5X_MCAN_IR_RF0F | \
+ 	 TCAN4X5X_MCAN_IR_RF1F | TCAN4X5X_MCAN_IR_RF0W | \
+ 	 TCAN4X5X_MCAN_IR_RF1W)
++
++#define CTRL_REG	0x1018
++#define CTRL_INIT_BIT	BIT(0)
++#define CTRL_CCE_BIT	BIT(1)
++#define RX_FIFO0_CONFIGURATION_REG	0x10A0
++#define RX_FIFO0_WATERMARK_BIT	BIT(24)
++
+ #define WDT_ENABLE (BIT(3) | BIT(4))
+ #define WDT_ENABLE_BIT BIT(3)
+ #define WDT_CLK (BIT(27) | BIT(28))
+@@ -128,6 +135,7 @@
+ #define TCAN4X5X_WD_6_S_TIMER (BIT(28) | BIT(29))
+ 
+ bool iw_tcan_prop = false; /* Flag added for Rugged Telematics Device */
++int iw_rxf0_reg_val; /* Variable to store the RX FIFO 0 Configuration register */
+ 
+ struct tcan4x5x_priv {
+ 	struct regmap *regmap;
+@@ -599,6 +607,11 @@
+ 	if (ret)
+ 		goto out_power;
+ 
++	if (of_get_property(tcan_node, "wakeup-source", NULL))
++	{
++		device_init_wakeup(mcan_class->dev, true);
++	}
++
+ 	netdev_info(mcan_class->net, "TCAN4X5X successfully initialized.\n");
+ 	return 0;
+ 
+@@ -639,6 +652,156 @@
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_MX6ULL_IWG26I
++static int tcan4x5x_suspend(struct device *device)
++{
++	int err = 0, ret = 0;
++	struct tcan4x5x_priv *priv = spi_get_drvdata(to_spi_device(device));
++	struct net_device *dev = priv->mcan_dev->net;
++
++	iw_rxf0_reg_val = 0;
++	if (netif_running(dev)) 
++	{
++		if (device_may_wakeup(device))
++		{
++			/* 
++			 * For modifying the watermark level for CAN, the INIT and \
++			 * CCE bits should be high. Those are Write protected bits. \
++			 * */
++			err = regmap_update_bits(priv->regmap, CTRL_REG, CTRL_INIT_BIT, CTRL_INIT_BIT);
++			if (err)
++				return err;
++
++			err = regmap_update_bits(priv->regmap, CTRL_REG, CTRL_CCE_BIT, CTRL_CCE_BIT);
++			if (err)
++				return err;
++
++			/* 
++			 * Reading the current value of RX FIFO 0 register and \
++			 * stores it in iw_rxf0_reg_val to revert it back. \
++			 * */
++			regmap_read(priv->regmap, RX_FIFO0_CONFIGURATION_REG, &iw_rxf0_reg_val);
++
++			/* Modify the watermark level as 1 in RX FIFO 0 CONF Register. */
++			err = iw_rxf0_reg_val & 0x80FFFFFF;
++			err |= 1 << 24;
++			ret = regmap_write(priv->regmap, RX_FIFO0_CONFIGURATION_REG, err);
++			if (ret)
++				return ret;
++
++		       	/* Disable the periodic Watchdog interrupt in RX FIFO 0 CONF Register. */
++			err = regmap_update_bits(priv->regmap, TCAN4X5X_CONFIG, TCAN4X5X_WATCHDOG_EN, !TCAN4X5X_WATCHDOG_EN);
++			if (err)
++				return err;
++
++			/* Disabling the INIT and CCE bits after changing the Watermark level. */
++			err = regmap_update_bits(priv->regmap, CTRL_REG, CTRL_CCE_BIT, !CTRL_CCE_BIT);
++			if (err)
++				return err;
++
++			err = regmap_update_bits(priv->regmap, CTRL_REG, CTRL_INIT_BIT, !CTRL_INIT_BIT);
++			if (err)
++				return err;
++
++			/* Enable the IRQ wakeup */
++			err = enable_irq_wake(priv->mcan_dev->net->irq);
++			if(err)
++				return err;
++
++			err = m_can_class_suspend(device);
++			  if(err)
++			  return err;
++		}
++	}
++
++	return err;
++}
++
++static int tcan4x5x_resume(struct device *device)
++{
++	int err = 0;
++	struct tcan4x5x_priv *priv = spi_get_drvdata(to_spi_device(device));
++	struct net_device *dev = priv->mcan_dev->net;
++
++	if (netif_running(dev))
++	{
++		if (device_may_wakeup(device))
++		{
++			/* Disable the RX interrupts */
++			m_can_disable_rx_irq(priv->mcan_dev);
++
++			/* Disable the IRQ wakeup */
++			err = disable_irq_wake(priv->mcan_dev->net->irq);
++			if(err)
++				return err;
++
++			if (priv->mcan_dev->ops->clear_interrupts)
++			{
++				priv->mcan_dev->ops->clear_interrupts(priv->mcan_dev);
++			}
++			if (priv->mcan_dev->ops->clear_interrupts_tx)
++			{
++				priv->mcan_dev->ops->clear_interrupts_tx(priv->mcan_dev);
++			}
++
++			err = m_can_rx_clear(dev);
++			if(err)
++				return err;
++
++			/* 
++			 * For modifying the watermark level for CAN, the INIT and \
++			 * CCE bits should be high. Those are Write protected bits. \
++			 * */
++			err = regmap_update_bits(priv->regmap, CTRL_REG, CTRL_INIT_BIT, CTRL_INIT_BIT);
++			if (err)
++				return err;
++
++			err = regmap_update_bits(priv->regmap, CTRL_REG, CTRL_CCE_BIT, CTRL_CCE_BIT);
++			if (err)
++				return err;
++
++			err = regmap_update_bits(priv->regmap, TCAN4X5X_CONFIG, WDT_RESET, WDT_RESET_BIT);
++			if (err)
++				return err; 
++
++			err = regmap_update_bits(priv->regmap, TCAN4X5X_CONFIG, TCAN4X5X_WATCHDOG_EN, TCAN4X5X_WATCHDOG_EN);
++			if (err)
++				return err; 
++
++			/* 
++			 * Reverting back the value of RX FIFO 0 register which was \
++			 * stored in iw_rxf0_reg_val. This will reverts the Watermark \
++			 * value to the previous value. \
++			 * */
++			err = regmap_write(priv->regmap, RX_FIFO0_CONFIGURATION_REG, iw_rxf0_reg_val);
++			if (err)
++				return err;
++
++			err = regmap_update_bits(priv->regmap, CTRL_REG, CTRL_CCE_BIT, !CTRL_CCE_BIT);
++			if (err)
++				return err;
++
++			err = regmap_update_bits(priv->regmap, CTRL_REG, CTRL_INIT_BIT, !CTRL_INIT_BIT);
++			if (err)
++				return err;
++
++			err = m_can_class_resume(device);
++			if(err)
++				return err;
++
++			/* Enable the RX interrupts */
++			m_can_enable_rx_irq(priv->mcan_dev);
++		}
++	}
++
++	return err;
++}
++
++static const struct dev_pm_ops tcan4x5x_pm_ops = {
++	SET_SYSTEM_SLEEP_PM_OPS(tcan4x5x_suspend, tcan4x5x_resume)
++};
++#endif /* CONFIG_MX6ULL_IWG26I */
++
+ static const struct of_device_id tcan4x5x_of_match[] = {
+ 	{ .compatible = "ti,tcan4x5x", },
+ 	{ }
+@@ -658,7 +821,11 @@
+ 	.driver = {
+ 		.name = DEVICE_NAME,
+ 		.of_match_table = tcan4x5x_of_match,
++#ifdef CONFIG_MX6ULL_IWG26I
++		.pm = &tcan4x5x_pm_ops,
++#else /* CONFIG_MX6ULL_IWG26I */
+ 		.pm = NULL,
++#endif /* CONFIG_MX6ULL_IWG26I */
+ 	},
+ 	.id_table = tcan4x5x_id_table,
+ 	.probe = tcan4x5x_can_probe,

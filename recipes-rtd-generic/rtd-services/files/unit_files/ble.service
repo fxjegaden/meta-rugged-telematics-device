@@ -1,0 +1,13 @@
+[Unit]
+Description=ble systemd service
+After=dnsmasq.service
+
+[Service]
+Type=forking
+ExecStart= /usr/bin/ble.sh
+#StandardOutput=file:/home/root/testlog.txt
+#StandardError=file:/home/root/testlogerror.txt
+
+[Install]
+WantedBy=multi-user.target
+

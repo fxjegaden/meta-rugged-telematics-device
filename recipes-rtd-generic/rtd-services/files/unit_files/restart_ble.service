@@ -1,0 +1,13 @@
+[Unit]
+Description=ble systemd service
+After=ble.service
+
+[Service]
+Type=simple
+ExecStartPre=/bin/sleep 30
+ExecStart= /usr/bin/restart_ble_serial.sh
+#StandardOutput=file:/home/root/testlog.txt
+#StandardError=file:/home/root/testlogerror.txt
+
+[Install]
+WantedBy=multi-user.target

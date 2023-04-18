@@ -1,0 +1,24 @@
+diff -Naur A/arch/arm/configs/imx6ull_iwg26i_defconfig B/arch/arm/configs/imx6ull_iwg26i_defconfig
+--- A/arch/arm/configs/imx6ull_iwg26i_defconfig	2022-11-24 10:44:22.556054708 +0530
++++ B/arch/arm/configs/imx6ull_iwg26i_defconfig	2022-12-15 09:32:29.906983479 +0530
+@@ -1987,7 +1987,7 @@
+ # CONFIG_INPUT_YEALINK is not set
+ # CONFIG_INPUT_CM109 is not set
+ # CONFIG_INPUT_REGULATOR_HAPTIC is not set
+-# CONFIG_INPUT_UINPUT is not set
++CONFIG_INPUT_UINPUT=y
+ # CONFIG_INPUT_PCF8574 is not set
+ # CONFIG_INPUT_PWM_BEEPER is not set
+ # CONFIG_INPUT_PWM_VIBRA is not set
+diff -Naur A/arch/arm/mach-imx/mach-iwg26i.c B/arch/arm/mach-imx/mach-iwg26i.c
+--- A/arch/arm/mach-imx/mach-iwg26i.c	2022-12-15 09:29:38.613932202 +0530
++++ B/arch/arm/mach-imx/mach-iwg26i.c	2022-12-15 09:35:25.180171878 +0530
+@@ -213,7 +213,7 @@
+ 	printk ("\n");
+ 	printk ("Board Info :\n");
+ 	printk ("\tBSP Version : %s\n", BSP_VERSION);
+-	printk ("\tDevice Name and Release : iW-PRGST-SC-R1.0-REL2.4.2_Rugged_Telematics_Device\n");
++	printk ("\tDevice Name and Release : iW-PRGST-SC-R1.0-REL2.4.3_Rugged_Telematics_Device\n");
+ 	printk ("\tCPU Unique ID\t: 0x%08x%08x \n", unique_id2, unique_id1);
+ 	printk ("\n");
+ 

@@ -1,0 +1,32 @@
+diff -Naur A/arch/arm/mach-imx/mach-iwg26i.c B/arch/arm/mach-imx/mach-iwg26i.c
+--- A/arch/arm/mach-imx/mach-iwg26i.c	2022-11-29 09:54:41.557734115 +0530
++++ B/arch/arm/mach-imx/mach-iwg26i.c	2022-11-29 09:54:25.589708636 +0530
+@@ -213,7 +213,7 @@
+ 	printk ("\n");
+ 	printk ("Board Info :\n");
+ 	printk ("\tBSP Version : %s\n", BSP_VERSION);
+-	printk ("\tDevice Name and Release : iW-PRGST-SC-R1.0-REL2.4.1_Rugged_Telematics_Device\n");
++	printk ("\tDevice Name and Release : iW-PRGST-SC-R1.0-REL2.4.2_Rugged_Telematics_Device\n");
+ 	printk ("\tCPU Unique ID\t: 0x%08x%08x \n", unique_id2, unique_id1);
+ 	printk ("\n");
+ 
+diff -Naur A/drivers/power/supply/bq25601.c B/drivers/power/supply/bq25601.c
+--- A/drivers/power/supply/bq25601.c	2022-11-24 10:44:21.640052485 +0530
++++ B/drivers/power/supply/bq25601.c	2022-11-29 09:53:53.985659410 +0530
+@@ -565,6 +565,16 @@
+ 	if (!limit)
+ 		return -EIO;
+ 
++	/* Disables the watchdog in battery charger */
++	ret = bq25601_write(bdi, BQ25601_REG_CTTC, 0x8F);
++	if (ret < 0)
++		return ret;
++
++	/* Reduces the charging current to 300mA */
++	ret = bq25601_write(bdi, BQ25601_REG_CCC, 0x85);
++	if (ret < 0)
++		return ret;
++
+ 	return 0;
+ }
+ 

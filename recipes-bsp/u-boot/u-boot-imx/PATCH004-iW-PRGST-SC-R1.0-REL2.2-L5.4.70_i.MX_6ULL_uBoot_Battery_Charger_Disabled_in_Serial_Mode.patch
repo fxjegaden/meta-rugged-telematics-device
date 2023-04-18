@@ -1,0 +1,74 @@
+diff -Naur A/arch/arm/mach-imx/cmd_bmode.c B/arch/arm/mach-imx/cmd_bmode.c
+--- A/arch/arm/mach-imx/cmd_bmode.c	2022-06-30 10:28:14.000000000 +0530
++++ B/arch/arm/mach-imx/cmd_bmode.c	2022-09-14 18:42:50.408320061 +0530
+@@ -60,6 +60,51 @@
+ 	const struct boot_mode *p;
+ 	int reset_requested = 1;
+ 
++#ifdef CONFIG_MX6ULL_IWG26I
++	int ret = 0;
++	char command[50] = {0};
++
++	/* i2c commands to disable the battery charger IC so that the device can be \
++	 * rebooted by reconnecting the 12 VDC adapter \
++	 * */
++	sprintf(command, "i2c dev 1");
++	ret = run_command(command, 0);
++	if(ret)
++	{
++		printf("Failed to select the i2c line\n");
++	}
++	else
++	{
++		sprintf(command, "i2c probe");
++		ret = run_command(command, 0);
++		if(ret)
++		{
++			printf("i2c lines probe error\n");
++		}
++		else
++		{
++			/* i2c command to disable the battery discharging */
++			sprintf(command, "i2c mw 0x6b 0x07 0x64");
++			ret = run_command(command, 0);
++			if(ret)
++			{
++				printf("Error while disabling the Battery\n");
++			}
++			else
++			{
++				printf("Battery disabled\n");
++			}
++		}
++	}
++
++	if(ret)
++	{
++		printf("\n\n######## Failed to Disable the Battery.\n######## Manually disable the Battery with below commands:\n\t\t# i2c dev 1\n\t\t# i2c probe\n\t\t# i2c mw 0x6b 0x07 0x64\n\n");
++		sprintf(command, "reset");
++		ret = run_command(command, 0);
++	}
++#endif /* CONFIG_MX6ULL_IWG26I */
++
+ 	if (argc < 2)
+ 		return CMD_RET_USAGE;
+ 	p = search_modes(argv[1]);
+diff -Naur A/board/freescale/mx6ull-iwg26i/mx6ull-iwg26i.c B/board/freescale/mx6ull-iwg26i/mx6ull-iwg26i.c
+--- A/board/freescale/mx6ull-iwg26i/mx6ull-iwg26i.c	2022-08-19 08:38:00.000000000 +0530
++++ B/board/freescale/mx6ull-iwg26i/mx6ull-iwg26i.c	2022-09-20 16:57:36.853727641 +0530
+@@ -671,13 +671,13 @@
+ 	else if (is_cpu_type(MXC_CPU_MX6ULZ))
+ 	{
+ 		puts("Board: Rugged-Telematics-Device\n");
+-		puts("Release: iW-PRGST-SC-R1.0-REL2.1-Rugged_Telematics_Device\n");
++		puts("Release: iW-PRGST-SC-R1.0-REL2.2_RTD_uBoot\n");
+ 		puts("BSP_VERSION: L5.4.70\n");
+ 	}
+ 	else
+ 	{
+ 		puts("Board: Rugged-Telematics-Device\n");
+-		puts("Release: iW-PRGST-SC-R1.0-REL2.1-Rugged_Telematics_Device\n");
++		puts("Release: iW-PRGST-SC-R1.0-REL2.2_RTD_uBoot\n");
+ 		puts("BSP_VERSION: L5.4.70\n");
+ 	}
+ 	return 0;

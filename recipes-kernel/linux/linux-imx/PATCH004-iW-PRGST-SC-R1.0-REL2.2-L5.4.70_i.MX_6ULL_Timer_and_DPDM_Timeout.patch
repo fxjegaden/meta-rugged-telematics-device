@@ -1,0 +1,149 @@
+diff -Naur A/arch/arm/boot/dts/imx6ull-iwg26i.dtsi B/arch/arm/boot/dts/imx6ull-iwg26i.dtsi
+--- A/arch/arm/boot/dts/imx6ull-iwg26i.dtsi	2022-08-18 15:32:19.212739362 +0530
++++ B/arch/arm/boot/dts/imx6ull-iwg26i.dtsi	2022-08-18 09:19:51.480734146 +0530
+@@ -208,10 +208,11 @@
+ 		reg = <0x6b>;
+ 	};
+ 
+-	/*pcf85263: pcf85263@51 {
+-		compatible = "nxp,pcf85363";
++	pcf85263: pcf85263@51 { /* RTC: PCF85263 */
++		compatible = "nxp,pcf85263";
+ 		reg = <0x51>;
+-	};*/
++		status = "okay";
++	};
+ };
+ 
+ &ecspi1 {
+diff -Naur A/arch/arm/configs/imx6ull_iwg26i_defconfig B/arch/arm/configs/imx6ull_iwg26i_defconfig
+--- A/arch/arm/configs/imx6ull_iwg26i_defconfig	2022-08-17 15:18:03.669238451 +0530
++++ B/arch/arm/configs/imx6ull_iwg26i_defconfig	2022-08-18 09:19:59.392841601 +0530
+@@ -3280,9 +3280,7 @@
+ CONFIG_RTC_LIB=y
+ CONFIG_RTC_CLASS=y
+ CONFIG_RTC_HCTOSYS=y
+-CONFIG_RTC_HCTOSYS_DEVICE="rtc0"
+ CONFIG_RTC_SYSTOHC=y
+-CONFIG_RTC_SYSTOHC_DEVICE="rtc0"
+ # CONFIG_RTC_DEBUG is not set
+ CONFIG_RTC_NVMEM=y
+ 
+@@ -3313,7 +3311,7 @@
+ # CONFIG_RTC_DRV_X1205 is not set
+ # CONFIG_RTC_DRV_PCF8523 is not set
+ # CONFIG_RTC_DRV_PCF85063 is not set
+-CONFIG_RTC_DRV_PCF85363=y
++# CONFIG_RTC_DRV_PCF85363 is not set
+ # CONFIG_RTC_DRV_PCF8563 is not set
+ # CONFIG_RTC_DRV_PCF8583 is not set
+ # CONFIG_RTC_DRV_M41T80 is not set
+diff -Naur A/arch/arm/mach-imx/mach-iwg26i.c B/arch/arm/mach-imx/mach-iwg26i.c
+--- A/arch/arm/mach-imx/mach-iwg26i.c	2022-08-17 15:18:03.665238477 +0530
++++ B/arch/arm/mach-imx/mach-iwg26i.c	2022-08-18 15:31:31.320694858 +0530
+@@ -213,7 +213,7 @@
+ 	printk ("\n");
+ 	printk ("Board Info :\n");
+ 	printk ("\tBSP Version : %s\n", BSP_VERSION);
+-	printk ("\tDevice Name and Release : iW-PRGST-R1.0-REL2.1-Rugged_Telematics_Device\n");
++	printk ("\tDevice Name and Release : iW-PRGST-R1.0-REL2.2-Rugged_Telematics_Device\n");
+ 	printk ("\tCPU Unique ID\t: 0x%08x%08x \n", unique_id2, unique_id1);
+ 	printk ("\n");
+ 
+diff -Naur A/drivers/rtc/Kconfig B/drivers/rtc/Kconfig
+--- A/drivers/rtc/Kconfig	2022-08-17 15:18:03.981236372 +0530
++++ B/drivers/rtc/Kconfig	2022-08-18 09:20:12.425015576 +0530
+@@ -33,6 +33,7 @@
+ config RTC_HCTOSYS_DEVICE
+ 	string "RTC used to set the system time"
+ 	depends on RTC_HCTOSYS
++	default "rtc1" if RTC_DRV_PCF85363
+ 	default "rtc0"
+ 	help
+ 	  The RTC device that will be used to (re)initialize the system
+@@ -64,7 +65,6 @@
+ config RTC_SYSTOHC_DEVICE
+ 	string "RTC used to synchronize NTP adjustment"
+ 	depends on RTC_SYSTOHC
+-	default RTC_HCTOSYS_DEVICE if RTC_HCTOSYS
+ 	default "rtc0"
+ 	help
+ 	  The RTC device used for NTP synchronization. The main difference
+diff -Naur A/drivers/rtc/Makefile B/drivers/rtc/Makefile
+--- A/drivers/rtc/Makefile	2022-08-17 15:18:03.981236372 +0530
++++ B/drivers/rtc/Makefile	2022-08-18 09:22:13.950472788 +0530
+@@ -120,6 +120,10 @@
+ obj-$(CONFIG_RTC_DRV_OPAL)	+= rtc-opal.o
+ obj-$(CONFIG_RTC_DRV_PALMAS)	+= rtc-palmas.o
+ obj-$(CONFIG_RTC_DRV_PCAP)	+= rtc-pcap.o
++
++# The rtc-snvs should be probed as "rtc0"
++obj-$(CONFIG_RTC_DRV_SNVS)	+= rtc-snvs.o
++
+ obj-$(CONFIG_RTC_DRV_PCF2123)	+= rtc-pcf2123.o
+ obj-$(CONFIG_RTC_DRV_PCF2127)	+= rtc-pcf2127.o
+ obj-$(CONFIG_RTC_DRV_PCF50633)	+= rtc-pcf50633.o
+@@ -160,7 +164,7 @@
+ obj-$(CONFIG_RTC_DRV_SD3078)   += rtc-sd3078.o
+ obj-$(CONFIG_RTC_DRV_SH)	+= rtc-sh.o
+ obj-$(CONFIG_RTC_DRV_SIRFSOC)	+= rtc-sirfsoc.o
+-obj-$(CONFIG_RTC_DRV_SNVS)	+= rtc-snvs.o
++#obj-$(CONFIG_RTC_DRV_SNVS)	+= rtc-snvs.o
+ obj-$(CONFIG_RTC_DRV_SPEAR)	+= rtc-spear.o
+ obj-$(CONFIG_RTC_DRV_STARFIRE)	+= rtc-starfire.o
+ obj-$(CONFIG_RTC_DRV_STK17TA8)	+= rtc-stk17ta8.o
+diff -Naur A/drivers/rtc/systohc.c B/drivers/rtc/systohc.c
+--- A/drivers/rtc/systohc.c	2022-08-17 15:18:03.981236372 +0530
++++ B/drivers/rtc/systohc.c	2022-08-18 09:23:13.167087488 +0530
+@@ -28,7 +28,19 @@
+ 
+ 	rtc = rtc_class_open(CONFIG_RTC_SYSTOHC_DEVICE);
+ 	if (!rtc)
++	{
++#ifdef CONFIG_MX6ULL_IWG26I
++		/* Device will expect external RTC if enabled. \
++		 * If the external RTC is not responding, device shoud select \
++		 * the Internal RTC for the time synchronization. \
++		 * Internal RTC will be enumerated as "rtc0" \
++		 */
++		pr_debug("%s: Error in opening \"%s\". Continuing with \"rtc0\"\n", dev_name(&rtc->dev), CONFIG_RTC_SYSTOHC_DEVICE);
++		rtc = rtc_class_open("rtc0");
++#endif /* CONFIG_MX6ULL_IWG26I */
++		if (!rtc)
+ 		goto out_err;
++	}
+ 
+ 	if (!rtc->ops || !rtc->ops->set_time)
+ 		goto out_close;
+diff -Naur A/drivers/watchdog/imx2_wdt.c B/drivers/watchdog/imx2_wdt.c
+--- A/drivers/watchdog/imx2_wdt.c	2022-08-17 15:18:04.053235893 +0530
++++ B/drivers/watchdog/imx2_wdt.c	2022-08-18 09:25:10.184150861 +0530
+@@ -58,6 +58,7 @@
+ #ifdef CONFIG_MX6ULL_IWG26I
+ #define IMX2_WDT_MAX_TIME	10U
+ #define IMX2_WDT_DEFAULT_TIME	10		/* in seconds */
++#define IW_PWR_OFF_MAX_TIMEOUT	3		/* in seconds */
+ #else /* CONFIG_MX6ULL_IWG26I */
+ #define IMX2_WDT_MAX_TIME	128U
+ #define IMX2_WDT_DEFAULT_TIME	60		/* in seconds */
+@@ -377,7 +378,19 @@
+ 		 * We are running, configure max timeout before reboot
+ 		 * will take place.
+ 		 */
+-		imx2_wdt_set_timeout(wdog, IMX2_WDT_MAX_TIME);
++		if (iw_wdog_prop)
++		{
++			/* Added to reduce the time CPU waits for rebooting \
++			 * after entering halt (poweroff/shutdown) condition. \
++			 * This helps to reduce the time to complete the \
++			 * execution of MCU Deep Power Down Mode \
++			 */
++			imx2_wdt_set_timeout(wdog, IW_PWR_OFF_MAX_TIMEOUT);
++		}
++		else
++		{
++			imx2_wdt_set_timeout(wdog, IMX2_WDT_MAX_TIME);
++		}
+ 		imx2_wdt_ping(wdog);
+ 		dev_crit(&pdev->dev, "Device shutdown: Expect reboot!\n");
+ 	}

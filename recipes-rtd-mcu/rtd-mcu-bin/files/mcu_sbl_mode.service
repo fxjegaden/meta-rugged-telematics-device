@@ -1,0 +1,9 @@
+[Unit]
+Description=To Reset the MCU and to run the user application in MCU
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/mcu_reset.sh
+
+[Install]
+WantedBy=multi-user.target

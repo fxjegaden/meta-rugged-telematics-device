@@ -1,0 +1,101 @@
+diff -Naur A/arch/arm/mach-imx/cmd_bmode.c B/arch/arm/mach-imx/cmd_bmode.c
+--- A/arch/arm/mach-imx/cmd_bmode.c	2022-11-26 14:49:43.079987715 +0530
++++ B/arch/arm/mach-imx/cmd_bmode.c	2022-11-26 14:52:48.580305071 +0530
+@@ -62,9 +62,11 @@
+ 
+ #ifdef CONFIG_MX6ULL_IWG26I
+ 	int ret = 0;
++	char in;
+ 	char command[50] = {0};
+ 
+-	/* i2c commands to disable the battery charger IC so that the device can be \
++	/* 
++	 * i2c commands to disable the battery charger IC so that the device can be \
+ 	 * rebooted by reconnecting the 12 VDC adapter \
+ 	 * */
+ 	sprintf(command, "i2c dev 1");
+@@ -99,9 +101,17 @@
+ 
+ 	if(ret)
+ 	{
+-		printf("\n\n######## Failed to Disable the Battery.\n######## Manually disable the Battery with below commands:\n\t\t# i2c dev 1\n\t\t# i2c probe\n\t\t# i2c mw 0x6b 0x07 0x64\n\n");
+-		sprintf(command, "reset");
+-		ret = run_command(command, 0);
++		printf("\n\n######## Failed to Disable the Battery. Enter \"y\" to continue with Serial Mode. Other inputs will reset the device ########\n\n");
++		in = getc();
++		if( (in == 'y') || (in == 'Y') )
++		{
++			// Do Nothing
++		}
++		else
++		{
++			sprintf(command, "reset");
++			ret = run_command(command, 0);
++		}
+ 	}
+ #endif /* CONFIG_MX6ULL_IWG26I */
+ 
+diff -Naur A/board/freescale/mx6ull-iwg26i/mx6ull-iwg26i.c B/board/freescale/mx6ull-iwg26i/mx6ull-iwg26i.c
+--- A/board/freescale/mx6ull-iwg26i/mx6ull-iwg26i.c	2022-11-26 14:49:43.111987763 +0530
++++ B/board/freescale/mx6ull-iwg26i/mx6ull-iwg26i.c	2022-11-29 09:35:34.319301786 +0530
+@@ -671,13 +671,13 @@
+ 	else if (is_cpu_type(MXC_CPU_MX6ULZ))
+ 	{
+ 		puts("Board: Rugged-Telematics-Device\n");
+-		puts("Release: iW-PRGST-SC-R1.0-REL2.2_RTD_uBoot\n");
++		puts("Release: iW-PRGST-SC-R1.0-REL2.2.1_RTD_uBoot\n");
+ 		puts("BSP_VERSION: L5.4.70\n");
+ 	}
+ 	else
+ 	{
+ 		puts("Board: Rugged-Telematics-Device\n");
+-		puts("Release: iW-PRGST-SC-R1.0-REL2.2_RTD_uBoot\n");
++		puts("Release: iW-PRGST-SC-R1.0-REL2.2.1_RTD_uBoot\n");
+ 		puts("BSP_VERSION: L5.4.70\n");
+ 	}
+ 	return 0;
+diff -Naur A/common/main.c B/common/main.c
+--- A/common/main.c	2022-11-26 14:49:43.031987643 +0530
++++ B/common/main.c	2022-11-29 09:35:56.983352575 +0530
+@@ -42,7 +42,41 @@
+ void main_loop(void)
+ {
+ 	const char *s;
++#ifdef CONFIG_MX6ULL_IWG26I
++	int ret = 0;
++	char command[50] = {0};
+ 
++	/* The below changes will reduce the Battery Charging Current to 300mA */
++	sprintf(command, "i2c dev 1");
++	ret = run_command(command, 0);
++	if(ret)
++	{
++		printf("Failed to select the i2c line\n");
++	}
++	else
++	{
++		sprintf(command, "i2c probe");
++		ret = run_command(command, 0);
++		if(ret)
++		{
++			printf("i2c lines probe error\n");
++		}
++		else
++		{
++			/* i2c command to change the battery charging current to 300mA */
++			sprintf(command, "i2c mw 0x6b 0x02 0x85");
++			ret = run_command(command, 0);
++			if(ret)
++			{
++				printf("Error while setting the battery current\n");
++			}
++			else
++			{
++				// Do Nothing
++			}
++		}
++	}
++#endif /* CONFIG_MX6ULL_IWG26I */
+ 	bootstage_mark_name(BOOTSTAGE_ID_MAIN_LOOP, "main_loop");
+ 
+ 	if (IS_ENABLED(CONFIG_VERSION_VARIABLE))

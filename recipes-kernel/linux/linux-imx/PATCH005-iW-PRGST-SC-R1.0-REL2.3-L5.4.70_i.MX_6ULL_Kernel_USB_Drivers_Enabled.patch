@@ -1,0 +1,139 @@
+diff -Naur A/arch/arm/boot/dts/imx6ull-iwg26i.dtsi B/arch/arm/boot/dts/imx6ull-iwg26i.dtsi
+--- A/arch/arm/boot/dts/imx6ull-iwg26i.dtsi	2022-09-07 13:21:27.461399147 +0530
++++ B/arch/arm/boot/dts/imx6ull-iwg26i.dtsi	2022-09-21 18:25:42.440888901 +0530
+@@ -170,7 +170,7 @@
+ };
+ 
+ &i2c1 {
+-	clock-frequency = <100000>;
++	clock-frequency = <400000>;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_i2c1>;
+ 	status = "okay";
+@@ -187,7 +187,7 @@
+ };
+ 
+ &i2c2 {
+-	clock-frequency = <100000>;
++	clock-frequency = <400000>;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_i2c2>;
+ 	status = "okay";
+@@ -211,7 +211,7 @@
+ 	pcf85263: pcf85263@51 { /* RTC: PCF85263 */
+ 		compatible = "nxp,pcf85263";
+ 		reg = <0x51>;
+-		status = "okay";
++		status = "disabled";
+ 	};
+ };
+ 
+diff -Naur A/arch/arm/configs/imx6ull_iwg26i_defconfig B/arch/arm/configs/imx6ull_iwg26i_defconfig
+--- A/arch/arm/configs/imx6ull_iwg26i_defconfig	2022-09-07 13:21:27.433399037 +0530
++++ B/arch/arm/configs/imx6ull_iwg26i_defconfig	2022-09-21 18:25:07.736857086 +0530
+@@ -2916,9 +2916,10 @@
+ #
+ CONFIG_USB_DEFAULT_PERSIST=y
+ # CONFIG_USB_DYNAMIC_MINORS is not set
+-# CONFIG_USB_OTG is not set
++CONFIG_USB_OTG=y
+ # CONFIG_USB_OTG_WHITELIST is not set
+ # CONFIG_USB_OTG_BLACKLIST_HUB is not set
++# CONFIG_USB_OTG_FSM is not set
+ # CONFIG_USB_LEDS_TRIGGER_USBPORT is not set
+ CONFIG_USB_AUTOSUSPEND_DELAY=2
+ # CONFIG_USB_MON is not set
+@@ -2986,8 +2987,8 @@
+ # CONFIG_USB_MUSB_HDRC is not set
+ # CONFIG_USB_DWC3 is not set
+ # CONFIG_USB_DWC2 is not set
+-CONFIG_USB_CHIPIDEA=m
+-CONFIG_USB_CHIPIDEA_OF=m
++CONFIG_USB_CHIPIDEA=y
++CONFIG_USB_CHIPIDEA_OF=y
+ CONFIG_USB_CHIPIDEA_UDC=y
+ CONFIG_USB_CHIPIDEA_HOST=y
+ # CONFIG_USB_ISP1760 is not set
+@@ -3092,8 +3093,9 @@
+ # CONFIG_USB_ULPI is not set
+ # end of USB Physical Layer drivers
+ 
+-CONFIG_USB_GADGET=m
+-# CONFIG_USB_GADGET_DEBUG is not set
++CONFIG_USB_GADGET=y
++CONFIG_USB_GADGET_DEBUG=y
++# CONFIG_USB_GADGET_VERBOSE is not set
+ # CONFIG_USB_GADGET_DEBUG_FILES is not set
+ # CONFIG_USB_GADGET_DEBUG_FS is not set
+ CONFIG_USB_GADGET_VBUS_DRAW=2
+@@ -3119,21 +3121,21 @@
+ # CONFIG_USB_DUMMY_HCD is not set
+ # end of USB Peripheral Controller
+ 
+-CONFIG_USB_LIBCOMPOSITE=m
+-CONFIG_USB_F_ACM=m
+-CONFIG_USB_F_SS_LB=m
+-CONFIG_USB_U_SERIAL=m
+-CONFIG_USB_U_ETHER=m
+-CONFIG_USB_F_SERIAL=m
+-CONFIG_USB_F_OBEX=m
+-CONFIG_USB_F_NCM=m
+-CONFIG_USB_F_ECM=m
+-CONFIG_USB_F_EEM=m
+-CONFIG_USB_F_SUBSET=m
+-CONFIG_USB_F_RNDIS=m
+-CONFIG_USB_F_MASS_STORAGE=m
+-CONFIG_USB_F_FS=m
+-CONFIG_USB_CONFIGFS=m
++CONFIG_USB_LIBCOMPOSITE=y
++CONFIG_USB_F_ACM=y
++CONFIG_USB_F_SS_LB=y
++CONFIG_USB_U_SERIAL=y
++CONFIG_USB_U_ETHER=y
++CONFIG_USB_F_SERIAL=y
++CONFIG_USB_F_OBEX=y
++CONFIG_USB_F_NCM=y
++CONFIG_USB_F_ECM=y
++CONFIG_USB_F_EEM=y
++CONFIG_USB_F_SUBSET=y
++CONFIG_USB_F_RNDIS=y
++CONFIG_USB_F_MASS_STORAGE=y
++CONFIG_USB_F_FS=y
++CONFIG_USB_CONFIGFS=y
+ CONFIG_USB_CONFIGFS_SERIAL=y
+ CONFIG_USB_CONFIGFS_ACM=y
+ CONFIG_USB_CONFIGFS_OBEX=y
+@@ -3147,15 +3149,13 @@
+ CONFIG_USB_CONFIGFS_F_FS=y
+ # CONFIG_USB_CONFIGFS_F_HID is not set
+ # CONFIG_USB_CONFIGFS_F_PRINTER is not set
+-CONFIG_USB_ZERO=m
+-CONFIG_USB_ETH=m
+-CONFIG_USB_ETH_RNDIS=y
+-# CONFIG_USB_ETH_EEM is not set
+-CONFIG_USB_G_NCM=m
+-CONFIG_USB_GADGETFS=m
++# CONFIG_USB_ZERO is not set
++# CONFIG_USB_ETH is not set
++# CONFIG_USB_G_NCM is not set
++CONFIG_USB_GADGETFS=y
+ # CONFIG_USB_FUNCTIONFS is not set
+-CONFIG_USB_MASS_STORAGE=m
+-CONFIG_USB_G_SERIAL=m
++# CONFIG_USB_MASS_STORAGE is not set
++# CONFIG_USB_G_SERIAL is not set
+ # CONFIG_USB_G_PRINTER is not set
+ # CONFIG_USB_CDC_COMPOSITE is not set
+ # CONFIG_USB_G_ACM_MS is not set
+diff -Naur A/arch/arm/mach-imx/mach-iwg26i.c B/arch/arm/mach-imx/mach-iwg26i.c
+--- A/arch/arm/mach-imx/mach-iwg26i.c	2022-09-07 13:21:27.445399085 +0530
++++ B/arch/arm/mach-imx/mach-iwg26i.c	2022-09-20 16:55:56.757204731 +0530
+@@ -213,7 +213,7 @@
+ 	printk ("\n");
+ 	printk ("Board Info :\n");
+ 	printk ("\tBSP Version : %s\n", BSP_VERSION);
+-	printk ("\tDevice Name and Release : iW-PRGST-R1.0-REL2.2-Rugged_Telematics_Device\n");
++	printk ("\tDevice Name and Release : iW-PRGST-SC-R1.0-REL2.3-Rugged_Telematics_Device\n");
+ 	printk ("\tCPU Unique ID\t: 0x%08x%08x \n", unique_id2, unique_id1);
+ 	printk ("\n");
+ 

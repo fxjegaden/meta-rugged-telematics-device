@@ -1,0 +1,48 @@
+diff -Naur A/arch/arm/boot/dts/imx6ull-iwg26i.dtsi B/arch/arm/boot/dts/imx6ull-iwg26i.dtsi
+--- A/arch/arm/boot/dts/imx6ull-iwg26i.dtsi	2023-03-03 15:28:23.932125364 +0530
++++ B/arch/arm/boot/dts/imx6ull-iwg26i.dtsi	2023-03-03 15:33:58.000133291 +0530
+@@ -244,8 +244,8 @@
+ 		#address-cells = <1>;
+ 		#size-cells = <1>;
+ 		spi-max-frequency = <18000000>;
+-		bosch,mram-cfg = <0x0 3 2 32 10 1 32 7>;
+-		clocks = <&hclk>, <&cclk>;
++		bosch,mram-cfg = <0x0 3 2 30 10 0 26 12>;
++                clocks = <&hclk>, <&cclk>;
+ 		clock-names = "hclk", "cclk";
+ 		interrupt-parent = <&gpio1>;
+ 		interrupts = <23 GPIO_ACTIVE_HIGH>;
+diff -Naur A/drivers/net/can/dev.c B/drivers/net/can/dev.c
+--- A/drivers/net/can/dev.c	2023-03-03 15:28:24.888125387 +0530
++++ B/drivers/net/can/dev.c	2023-03-03 15:33:24.956132507 +0530
+@@ -463,7 +463,7 @@
+ 		priv->echo_skb[idx] = skb;
+ 	} else {
+ 		/* locking problem with netif_stop_queue() ?? */
+-		netdev_err(dev, "%s: BUG! echo_skb is occupied!\n", __func__);
++		//netdev_err(dev, "%s: BUG! echo_skb is occupied!\n", __func__);
+ 		kfree_skb(skb);
+ 	}
+ }
+@@ -475,8 +475,8 @@
+ 	struct can_priv *priv = netdev_priv(dev);
+ 
+ 	if (idx >= priv->echo_skb_max) {
+-		netdev_err(dev, "%s: BUG! Trying to access can_priv::echo_skb out of bounds (%u/max %u)\n",
+-			   __func__, idx, priv->echo_skb_max);
++	//	netdev_err(dev, "%s: BUG! Trying to access can_priv::echo_skb out of bounds (%u/max %u)\n",
++	//		   __func__, idx, priv->echo_skb_max);
+ 		return NULL;
+ 	}
+ 
+diff -Naur A/drivers/net/can/m_can/m_can.c B/drivers/net/can/m_can/m_can.c
+--- A/drivers/net/can/m_can/m_can.c	2023-03-03 15:28:24.888125387 +0530
++++ B/drivers/net/can/m_can/m_can.c	2023-03-03 15:30:47.044128760 +0530
+@@ -1683,6 +1683,7 @@
+ 			cdev->tx_skb = skb;
+ 			netif_stop_queue(cdev->net);
+ 			queue_work(cdev->tx_wq, &cdev->tx_work);
++		        netif_start_queue(cdev->net);
+ 		}
+ 	} else {
+ 		cdev->tx_skb = skb;
