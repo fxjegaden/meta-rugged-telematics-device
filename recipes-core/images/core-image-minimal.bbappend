@@ -16,6 +16,7 @@ IMAGE_INSTALL_append += " \
 	pulseaudio-server pulseaudio-module-bluetooth-discover \
 	pulseaudio-module-bluez5-device pulseaudio-module-bluez5-discover \
 	bluez5-noinst-tools bluez5-obex pulseaudio phytool glibc-gconv-utf-16 \
+	rauc u-boot-scr \
 "
 
 IMAGE_LINGUAS = " "
@@ -36,4 +37,4 @@ ROOTFS_POSTPROCESS_COMMAND += "update_sudoers;"
 
 # Updates the Login password for the root user
 inherit extrausers
-EXTRA_USERS_PARAMS = "usermod -P iWavesys123 root;"
+EXTRA_USERS_PARAMS = "usermod -P LMA2-stimio! root;"
