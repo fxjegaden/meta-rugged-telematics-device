@@ -1,7 +1,9 @@
 #ifndef __ACCELEROMETER_H__
 #define __ACCELEROMETER_H__
 
-#include <math.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct _accelerometer_api_priv
 {
@@ -15,6 +17,10 @@ int accelerometer_read(accelerometer_api_priv *adata);
 int set_acc_sampling_frequency(uint8_t);
 int set_acc_low_pass_filter(uint8_t);
 int set_acc_wakeup_threshold(uint8_t);
-int acc_temp_read( float_t *temperature );
+int config_acc_wakeup( int option );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* #define __ACCELEROMETER_H__ */

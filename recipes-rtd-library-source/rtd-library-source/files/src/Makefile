@@ -1,4 +1,4 @@
-CFLAGS = -I../inc/rugged_telematics_lib/ -I../inc/libcommon/ -I../inc/libxml/ -lm -ldl -g -Wall -fPIC -lpthread -shared
+CFLAGS = -I../inc/rugged_telematics_lib -I../inc/libcommon -I../inc/libxml -lm -ldl -g -Wall -fPIC -lpthread -shared
 
 all: 4g.o 4g_monitor.o acc_ism330dlc.o battery.o ble.o can_comm.o can_lib.o eth.o get.o gpio.o gyro_ism330dlc.o i2c_framing.o iio_utils.o init.o mag.o ntp.o power_management.o rs232.o serial.o thread_def.o u_gps.o wifi.o
 	$(CC) $(CFLAGS) 4g.o 4g_monitor.o acc_ism330dlc.o battery.o ble.o can_comm.o can_lib.o eth.o get.o gpio.o gyro_ism330dlc.o i2c_framing.o iio_utils.o init.o mag.o ntp.o power_management.o rs232.o serial.o thread_def.o u_gps.o wifi.o -o libRuggedTelematics.so

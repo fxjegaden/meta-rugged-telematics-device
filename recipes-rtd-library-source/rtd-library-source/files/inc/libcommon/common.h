@@ -6,6 +6,9 @@
 
 #define DISABLE                 0
 #define ENABLE                  1
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define CAN0			"can0"
 #define CAN1			"can1"
@@ -61,5 +64,9 @@ int rs232_write( char *buf, size_t sz);
 int read_digital_in(int din, int *state);
 int write_digital_out(int dout, int state);
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __COMMON_H__ */

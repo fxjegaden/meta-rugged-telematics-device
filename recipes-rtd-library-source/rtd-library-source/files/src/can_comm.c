@@ -43,10 +43,6 @@ int can_sem_init (void)
 	}else
 		sem_unlink("/can_lock");
 	return ret;
-}
-
-void can_sem_deinit (void)
-{
 	if (can_lock != SEM_FAILED)
 		sem_destroy(can_lock);
 

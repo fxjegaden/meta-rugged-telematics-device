@@ -1,6 +1,8 @@
 #ifndef __GPS_H_
 #define __GPS_H_
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*RMC*/
 
 #define TIME_STAMP          1
@@ -36,5 +38,9 @@ int gps_init();
 int gps_deinit();
 int agps_init();
 int get_gps_data(char * nmea, size_t * g_nbytes, char *recv_data, int length);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
