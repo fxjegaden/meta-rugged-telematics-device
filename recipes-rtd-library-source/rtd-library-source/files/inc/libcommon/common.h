@@ -14,7 +14,7 @@ extern "C" {
 #define CAN1			"can1"
 #define CAN2			"can2"
 
-int rs232_fd;
+
 
 /* Common APIs */
 int init( int network_enable );

@@ -4,6 +4,8 @@
 #include "error_nos.h"
 #include "common.h"
 
+
+static int rs232_fd;
 /*
  * API		: int rs232_init(int baudrate, const char *node)
  * Description	: API to initialize the RS232 UART.
