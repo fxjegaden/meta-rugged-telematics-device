@@ -721,7 +721,7 @@ int get_gps_data(char *nmea, size_t * g_nbytes, char *recv_data, int length)
 					/* add file descriptor to the set */
 					FD_SET(gps_fd, &set);
 
-					timeout.tv_sec = 0;
+					timeout.tv_sec = 1;
 					timeout.tv_usec = 100;
 
 					ret = select(gps_fd + 1, &set, NULL, NULL, &timeout);
@@ -835,7 +835,6 @@ int get_gps_data(char *nmea, size_t * g_nbytes, char *recv_data, int length)
 				else if( strlen(gps_buf) <= 0)
 				{
 					ret = E_GPS_NMEA_TIMEOUT;
-					printf("%s: Timeout occured with errno |%d|\n\n\n", __func__, errno);
 				}
 				else
 				{
