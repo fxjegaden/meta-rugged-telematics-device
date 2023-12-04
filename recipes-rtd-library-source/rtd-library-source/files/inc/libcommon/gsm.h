@@ -7,6 +7,10 @@
 #define GSM_AT_PORT		"/dev/ttyUSB2"
 #define GSM_CONNECTION_PORT	"/dev/ttyUSB3"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int gsm_at_cmd(char *, char *, int, int);
 int get_gsm_imei(char *, int);
 int check_gsm_nw_connection();
@@ -30,5 +34,7 @@ int delete_all_messages( int max_resp_time );
 int establish_connection();
 int network_monitor_disable();
 void gsm_apn_configuration(char *apn_name, char *atd_num, char *username, char *password);
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* __GSM_HEADER__ */

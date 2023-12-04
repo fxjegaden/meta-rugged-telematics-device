@@ -3,6 +3,11 @@
 #include <errno.h>
 //#include "error_macro.h"
 #include <stdio.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define ENABLE_OBD_DEBUG_ALL
 //#define ENABLE_IOBD_DEBUG_LEVEL1
 //#define ENABLE_IOBD_DEBUG_LEVEL2
@@ -86,5 +91,7 @@ static inline int CHK_NULL ( int *ret, FILE *fd, char *err_str)
 	return OBD2_APP_SUCCESS;
 }
 
-
+#ifdef __cplusplus
+}
+#endif
 #endif //__DEBUG__H
