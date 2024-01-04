@@ -24,7 +24,9 @@
 #include "iio_utils.h"
 #include "obd2lib.h"
 #include "lib_common.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define ACC_I2C_NO		1
 
 #define ACC_MAIN_PATH		"/sys/bus/iio/devices/iio:device"
@@ -51,5 +53,7 @@ void process_scan_acc(char *, struct iio_channel_info *, int);
 void print2byte_acc(int, struct iio_channel_info *, int);
 void acc_sem_init (void) __attribute__ ((constructor));
 void acc_sem_deinit (void) __attribute__ ((destructor));
-
+#ifdef __cplusplus
+}
+#endif
 #endif

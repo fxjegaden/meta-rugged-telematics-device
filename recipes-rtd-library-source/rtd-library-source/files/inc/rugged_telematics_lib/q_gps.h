@@ -4,7 +4,9 @@
 #include <termios.h>
 #include <stddef.h>
 #include "serial.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define TIME_STAMP		1
 #define FIX_STATUS		2
 #define CUR_LATITUDE		3
@@ -33,5 +35,7 @@
 /* NaN : This is required to pass from hw_deinit */
 
 int board_init_gps();
-
+#ifdef __cplusplus
+}
+#endif
 #endif

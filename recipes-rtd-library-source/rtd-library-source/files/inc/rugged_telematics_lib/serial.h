@@ -14,7 +14,9 @@
 #include <signal.h>
 #include <termios.h>
 #include "lib_common.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define SERIAL_PORT_ACM0	(0)
 #define RS232_UART		"/dev/ttymxc5"
 #define USB_2			"/dev/ttyUSB2"
@@ -52,5 +54,7 @@ int iW_Serial_SetParity( struct termios *TermiosPtr, char Parity);
 int iW_Serial_Init(int Serial_Port_Number,int baudrate, const char *node);
 int iW_Serial_Read(int fd , char *buf, long int sz);
 int iW_Serial_Write(int fd , char *buf, size_t sz);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

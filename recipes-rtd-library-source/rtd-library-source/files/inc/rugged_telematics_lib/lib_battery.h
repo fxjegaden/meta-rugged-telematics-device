@@ -17,7 +17,9 @@
 #include "iio_utils.h"
 #include "lib_common.h"
 #include "lib_accelerometer.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define IBAT_I2C_NO			1
 #define IBATTERY_NODE			"/sys/class/power_supply/bq25601-battery"
 #define IBATTERY_VOLTAGE		"/sys/bus/iio/devices/iio:device0"
@@ -56,5 +58,7 @@
 
 /* API to control the Battery based on the temperature */
 int battery_control_monitoring( uint32_t battery_monitoring_interval );
-
+#ifdef __cplusplus
+}
+#endif
 #endif

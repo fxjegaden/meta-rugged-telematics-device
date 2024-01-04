@@ -36,7 +36,9 @@
 #include "lib_common.h"
 #include "q_gps.h"
 #include "error_nos.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*MACROS*/
 #define SNAME				"/sync"
 #define NODE_EXP_WITHOUT_GYRO		"/dev/input/event2"
@@ -52,5 +54,7 @@ int timer_wakeup_check_enable( );
 int timer_wakeup_check_disable( );
 int timer_wakeup_monitor_status( );
 int ignition_pin_status_check( );
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* __THREAD_H__ */

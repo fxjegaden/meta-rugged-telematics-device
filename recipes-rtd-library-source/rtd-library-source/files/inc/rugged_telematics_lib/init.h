@@ -3,7 +3,9 @@
 #include "lib_common.h"
 #include "obd2lib.h"
 #include "4g.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define CAR
 #define CPU_UNIQUE_ID_LO	"/sys/fsl_otp/HW_OCOTP_CFG0"
 #define CPU_UNIQUE_ID_HI	"/sys/fsl_otp/HW_OCOTP_CFG1"
@@ -106,5 +108,7 @@ int three_v3_off();
 void enable_only_rmc();
 int time_diff_seconds(struct timespec *time_end, struct timespec *time_start);
 int network_manager();
-
+#ifdef __cplusplus
+}
+#endif
 #endif

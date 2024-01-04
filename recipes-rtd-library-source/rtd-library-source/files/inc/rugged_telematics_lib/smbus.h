@@ -16,7 +16,9 @@
     
     #include <linux/types.h>
     #include <linux/i2c.h>
-    
+    #ifdef __cplusplus
+extern "C" {
+#endif
     extern __s32 i2c_smbus_access(int file, char read_write, __u8 command,
                       int size, union i2c_smbus_data *data);
     
@@ -46,5 +48,7 @@
     /* Returns the number of read bytes */
     extern __s32 i2c_smbus_block_process_call(int file, __u8 command, __u8 length,
                           __u8 *values);
-    
+#ifdef __cplusplus
+}
+#endif
     #endif /* LIB_I2C_SMBUS_H */

@@ -23,7 +23,9 @@
 #define _I2CBUSSES_H
 
 #include <unistd.h>
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 struct i2c_adap {
 	int nr;
 	char *name;
@@ -40,5 +42,7 @@ int open_i2c_dev(int i2cbus, char *filename, size_t size, int quiet);
 int set_slave_addr(int file, int address, int force);
 
 #define MISSING_FUNC_FMT	"Error: Adapter does not have %s capability\n"
-
+#ifdef __cplusplus
+}
+#endif
 #endif

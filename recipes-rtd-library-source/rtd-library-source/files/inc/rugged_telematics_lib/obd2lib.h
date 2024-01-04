@@ -1,7 +1,9 @@
 #ifndef __OBD2LIB__
 #define __OBD2LIB__
 #include "serial.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 typedef struct _serial_intf{
 	int tty_fd;
 	fd_set read_fds;
@@ -72,5 +74,7 @@ _libClient libClient;
 
 #define LINK_DOWN 0
 #define LINK_UP 1
-
+#ifdef __cplusplus
+}
+#endif
 #endif

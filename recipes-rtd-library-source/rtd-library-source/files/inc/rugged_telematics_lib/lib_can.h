@@ -63,7 +63,9 @@
 #include "lib_socketcan.h"
 #include "error_nos.h"
 #include "lib_common.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 FILE *fp;
 /* buffer sizes for CAN frame string representations */
 
@@ -237,4 +239,8 @@ int snprintf_can_error_frame(char *buf, size_t len, const struct canfd_frame *cf
  */
 
 int set_qlen(const char *name, int qlen);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

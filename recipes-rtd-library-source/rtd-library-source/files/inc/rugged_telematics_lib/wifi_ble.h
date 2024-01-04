@@ -8,7 +8,9 @@
 #include <unistd.h>
 #include "lib_common.h"
 #include "obd2lib.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define WIFI_HOST_MODE 1
 #define WIFI_STA_MODE 0
 
@@ -16,5 +18,7 @@ int wifi_mode;
 
 int set_wifi_hostapd_mode( );
 int set_wifi_station_mode( );
-
+#ifdef __cplusplus
+}
+#endif
 #endif

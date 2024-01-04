@@ -12,7 +12,9 @@
 #include "error_nos.h"
 #include "gpio.h"
 #include "debug.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define READ_MAC_NODE		"/sys/class/"
 
 #define MODE1			0x1
@@ -137,5 +139,9 @@ int CheckLink(char *ifname);
 /* Ethernet Related APIs */
 int read_fused_mac_addr(char *mac_addr);
 int Check_eth_Link();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __LIB_COMMON_H__ */

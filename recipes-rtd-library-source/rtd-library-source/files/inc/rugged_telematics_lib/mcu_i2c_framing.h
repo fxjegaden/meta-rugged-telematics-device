@@ -16,7 +16,9 @@
 #include "lib_common.h"
 #include "mcu_i2c_common.h"
 #include "error_nos.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 /* Debug Prints Enable */
 #define COMMON_DEBUG_PRINTS			1
 #define DEBUG_EN				0
@@ -109,5 +111,7 @@ int get_i2c_register_values( uint32_t i2c_file, uint8_t i2c_addr, uint8_t *i2c_f
 int mcu_i2c_read( uint32_t bus_num, uint8_t i2c_addr, uint8_t *i2c_frame );
 /* API for Enabling the requested Wakeup Sources */
 int enable_requested_wakeup_sources( uint8_t wakeup_source, uint32_t *timer );
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* __LIB_MCU_I2C_H__ */

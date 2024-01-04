@@ -5,7 +5,9 @@
 #include "lib_common.h"
 #include "lib_accelerometer.h"
 #include "mcu_i2c_framing.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define TIMER_WAKEUPALARM_FILE_NAME	"/sys/class/rtc/rtc0/wakealarm"
 #define RTC_WAKEUPALARM_FILE_NAME	"/dev/rtc1"
 #define ACC_WAKEUP_FILE_NAME		"/sys/bus/i2c/devices/i2c-1/1-006a/power/wakeup"
@@ -66,5 +68,7 @@
 #define REG_RTC_ALARM_ENABLE_A1E_HOUR	0b00000100
 #define REG_RTC_ALARM_ENABLE_A1E_DAY	0b00001000
 #define REG_RTC_ALARM_ENABLE_A1E_MONTH	0b00010000
-
+#ifdef __cplusplus
+}
+#endif
 #endif

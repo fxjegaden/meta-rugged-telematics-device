@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #ifndef _IIO_UTILS_H_
 #define _IIO_UTILS_H_
-
 /* IIO - useful set of util functionality
  *
  * Copyright (c) 2008 Jonathan Cameron
@@ -9,7 +8,9 @@
 
 #include <stdint.h>
 #include <string.h>
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 /* Made up value to limit allocation sizes */
 #define IIO_MAX_NAME_LENGTH 64
 
@@ -80,4 +81,7 @@ int read_sysfs_posint(const char *filename, const char *basedir);
 int read_sysfs_float(const char *filename, const char *basedir, float *val);
 int read_sysfs_string(const char *filename, const char *basedir, char *str);
 int size_from_channelarray(struct iio_channel_info *channels, int num_channels);
+#ifdef __cplusplus
+}
+#endif
 #endif /* _IIO_UTILS_H_ */

@@ -1,6 +1,8 @@
 #include <linux/input.h>
 #include <magnetometer.h>
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define MAGNETOMETER_ENABLE 	"echo 1 > /sys/devices/virtual/input/input2/enable"
 #define MAGNETOMETER_DISABLE 	"echo 0 > /sys/devices/virtual/input/input2/enable"
 #define MAG_MAIN_PATH		"/sys/bus/iio/devices/iio:device"
@@ -14,3 +16,6 @@
 #define IIS2MDC_SLAVE_ADDR	0x1e
 #define IIS2MDC_CFG_REG_A	0x60
 #define PI			3.141592
+#ifdef __cplusplus
+}
+#endif

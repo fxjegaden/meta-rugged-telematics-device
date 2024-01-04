@@ -19,7 +19,9 @@
 #include "init.h"
 #include "thread.h"
 #include "error_nos.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define GYRO_MAIN_PATH 		"/sys/bus/iio/devices/iio:device"
 #define GYRO_SUB_PATH_SCAN	"/scan_elements"
 #define GYRO_SUB_PATH_BUF	"/buffer"
@@ -31,3 +33,6 @@
 
 int gyro_enable();
 int gyro_disable();
+#ifdef __cplusplus
+}
+#endif

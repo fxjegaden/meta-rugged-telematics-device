@@ -20,7 +20,11 @@
 
 #ifndef _UTIL_H
 #define _UTIL_H
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern int user_ack(int def);
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* _UTIL_H */

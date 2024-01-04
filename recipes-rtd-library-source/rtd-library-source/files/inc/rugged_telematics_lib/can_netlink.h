@@ -17,7 +17,9 @@
 
 #ifndef _UAPI_CAN_NETLINK_H
 #define _UAPI_CAN_NETLINK_H
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <linux/types.h>
 
 /*
@@ -130,5 +132,7 @@ enum {
 };
 
 #define IFLA_CAN_MAX	(__IFLA_CAN_MAX - 1)
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* !_UAPI_CAN_NETLINK_H */

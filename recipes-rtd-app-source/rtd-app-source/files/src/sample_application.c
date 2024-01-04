@@ -145,7 +145,7 @@ int main()
 	long milliseconds;
 
 init:
-	printf("\n#############-: NEW TEST APP RUN :-#############\n");	
+	printf("\n#############-: STIMIO RUN :-#############\n");	
 	printf("\n############ [INIT] ##############\n");
 	int count = 0;
 	rc = init(1);
@@ -174,22 +174,6 @@ init:
 	rc = eth_deinit( );
 	printf("eth_deinit rc value %x\n", rc );
 
-	/*Initializing bluetooth interface */
-	rc = ble_init( );
-	printf("ble_init rc value %x\n", rc );
-
-	/* Getting bluetotth MAC address */
-	get_mac_address("hci0",ble_addr);
-
-
-	/*Initializing wifi interface */
-	rc = wifi_init( WIFI_HOSTAPD_MODE );
-	printf("wifi_init rc value %X\n", rc );
-
-	/* Getting MAC address of wifi interface */
-	get_mac_address("wlan0",wifi_addr);
-
-	printf("\n############[GSM Modem]##############\n");
 	/* checking whether modem is on or off. */
 gsm:
 	rc = check_gsm_modem_status();

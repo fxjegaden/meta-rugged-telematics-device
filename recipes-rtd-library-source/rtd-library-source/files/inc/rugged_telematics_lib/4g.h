@@ -1,5 +1,6 @@
 #ifndef __4G_HEADER__
 #define __4G_HEADER__
+
 #include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,6 +17,11 @@
 #include "obd2lib.h"
 #include "thread.h"
 #include "error_nos.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #define MXC_0				"/dev/ttymxc0"
 #define GSM_GPS_PORT			"/dev/ttyUSB0"
@@ -83,5 +89,7 @@ int gsm_apn_config_read(char* apn_val);
 int gsm_at_port_close( );
 int read_event( );
 int link_listener(void);
-
+#ifdef __cplusplus
+}
+#endif
 #endif //__4G_HEADER__
